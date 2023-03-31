@@ -42,7 +42,7 @@ dinos = {
 
 player_dinos = []
 
-game_active = False
+game_state = "title"
 last_hatch_time = 0
 hatch_text_duration = 5
 player_dino_time = 0
@@ -67,7 +67,7 @@ while True:
     if event.type == pygame.QUIT:
       pygame.quit()
       exit()
-    if game_active:
+    if game_state == "hatch_screen":
       screen.fill((0, 0, 0))
       screen.blit(dino_egg, dino_egg_rect)
       my_dino_button = pygame.draw.rect(screen, (0, 200, 100), pygame.Rect(250, 650, 300, 100))
@@ -76,33 +76,25 @@ while True:
         if dino_egg_rect.collidepoint(event.pos): 
           hatch_dino(random.randint(0, 46))
         elif my_dino_button.collidepoint(event.pos):
-          player_dinos_fixed = str(player_dinos)
-          player_dinos_fixed = player_dinos_fixed.replace("[","")
-          player_dinos_fixed = player_dinos_fixed.replace("]","")
-          player_dinos_fixed = player_dinos_fixed.replace("'","")
-          player_dino_time = time.time()
-          player_dinos_text = smaller_font.render('Your dinos are: '+ player_dinos_fixed, True, (255, 255, 255))
-          player_dinos_text_rect = player_dinos_text.get_rect()
-          player_dinos_text_rect.center = (x // 2, 600)
-          screen.blit(player_dinos_text, player_dinos_text_rect)
-          print(player_dinos_fixed)
-
-          
+          game_state = "view_dino_screen"
       if time.time() - last_hatch_time < hatch_text_duration:
         hatch_text = smaller_font.render('You hatched a '+ newDino, True, (255, 255, 255))
         hatch_text_rect = hatch_text.get_rect()
         hatch_text_rect.center = (x // 2, 60)
         screen.blit(hatch_text, hatch_text_rect)
-      if time.time() - player_dino_time < player_dino_duration:
-        player_dinos_text = smaller_font.render('Your dinos are: '+ player_dinos_fixed, True, (255, 255, 255))
-        screen.blit(player_dinos_text, player_dinos_text_rect)
 
-    else: 
+    if game_state == "title": 
       screen.fill((0, 200, 100))
       screen.blit(title_text, title_text_rect)
       screen.blit(start_text, start_text_rect)
       if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-        game_active = True
-
+        game_state = "hatch_screen"
+    if game_state == "view_dino_screen":
+      screen.fill((0, 0, 0))
+      for dino_print in range(len(player_dinos)):
+        player_dinos_text = smaller_font.render(player_dinos[dino_print], True, (255, 255, 255))
+        player_dinos_text_rect = player_dinos_text.get_rect()
+        player_dinos_text_rect.center = (x // 2, 100 + 50 * dino_print)
+        screen.blit(player_dinos_text, player_dinos_text_rect)
     pygame.display.update()
     clock.tick(60)
