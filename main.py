@@ -5,7 +5,7 @@ from sys import exit
 import random
 import time
 
-x = 800
+x = 1200
 y = 800
 pygame.init()
 clock = pygame.time.Clock()
@@ -26,11 +26,15 @@ start_text_rect.center = (x // 2, 500)
 
 dino_egg = pygame.transform.scale(pygame.image.load('dinosaur_egg.png'), (400, 400)).convert()
 dino_egg_rect = dino_egg.get_rect()
-dino_egg_rect.center = (x // 2, 300)
+dino_egg_rect.center = (x // 2, 360)
 
 my_dino_text = slightly_smaller_font.render('View Dinos', True, (255, 255, 255))
 my_dino_text_rect = my_dino_text.get_rect()
 my_dino_text_rect.center = (x // 2, 700)
+
+back_text = slightly_smaller_font.render('Back', True, (255, 255, 255))
+back_text_rect = back_text.get_rect()
+back_text_rect.center = (x // 2, 600)
 
 mouse = pygame.mouse.get_pos()
 
@@ -42,59 +46,83 @@ dinos = {
 
 player_dinos = []
 
-game_state = "title"
+game_state = 'title'
 last_hatch_time = 0
 hatch_text_duration = 5
 player_dino_time = 0
 player_dino_duration= 5
+number_of_eggs = 0
 
 def hatch_dino(current_dino):
+  global number_of_eggs
   global last_hatch_time
   global newDino
-  hatch_text = smaller_font.render('You hatched a '+ dinos[current_dino][0], True, (255, 255, 255))
-  hatch_text_rect = hatch_text.get_rect()
-  hatch_text_rect.center = (x // 2, 60)
-  screen.blit(hatch_text, hatch_text_rect)
-  newDino = dinos[current_dino][0]
-
-  player_dinos.append(newDino)
-  last_hatch_time = time.time()
-  return newDino
-
+  if number_of_eggs <= 8:
+    hatch_text = smaller_font.render('You hatched a '+ dinos[current_dino][0], True, (255, 255, 255))
+    hatch_text_rect = hatch_text.get_rect()
+    hatch_text_rect.center = (x // 2, 60)
+    screen.blit(hatch_text, hatch_text_rect)
+    newDino = dinos[current_dino][0]
+    number_of_eggs += 1
+    
+    if len(player_dinos) < 9:
+      player_dinos.append(newDino)
+      last_hatch_time = time.time()
+    return newDino and number_of_eggs
 
 while True:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       pygame.quit()
       exit()
-    if game_state == "hatch_screen":
+    if game_state == 'hatch_screen':
       screen.fill((0, 0, 0))
       screen.blit(dino_egg, dino_egg_rect)
-      my_dino_button = pygame.draw.rect(screen, (0, 200, 100), pygame.Rect(250, 650, 300, 100))
+      my_dino_button = pygame.draw.rect(screen, (0, 200, 100), pygame.Rect(x // 2 - 150, 650, 300, 100))
       screen.blit(my_dino_text, my_dino_text_rect)
+      
       if event.type == pygame.MOUSEBUTTONDOWN:
         if dino_egg_rect.collidepoint(event.pos): 
-          hatch_dino(random.randint(0, 46))
+          hatch_dino(random.randint(0, 47))
         elif my_dino_button.collidepoint(event.pos):
-          game_state = "view_dino_screen"
+          game_state = 'view_dino_screen'
       if time.time() - last_hatch_time < hatch_text_duration:
         hatch_text = smaller_font.render('You hatched a '+ newDino, True, (255, 255, 255))
         hatch_text_rect = hatch_text.get_rect()
         hatch_text_rect.center = (x // 2, 60)
         screen.blit(hatch_text, hatch_text_rect)
-
-    if game_state == "title": 
+    if game_state == 'title': 
       screen.fill((0, 200, 100))
       screen.blit(title_text, title_text_rect)
       screen.blit(start_text, start_text_rect)
       if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-        game_state = "hatch_screen"
-    if game_state == "view_dino_screen":
+        game_state = 'hatch_screen'
+    if game_state == 'view_dino_screen':
       screen.fill((0, 0, 0))
+      if number_of_eggs > 0:
+        back_text_button = pygame.draw.rect(screen, (0, 200, 100), pygame.Rect(x // 2 - 150, 550, 300, 100))
+        screen.blit(back_text, back_text_rect)
       for dino_print in range(len(player_dinos)):
         player_dinos_text = smaller_font.render(player_dinos[dino_print], True, (255, 255, 255))
         player_dinos_text_rect = player_dinos_text.get_rect()
         player_dinos_text_rect.center = (x // 2, 100 + 50 * dino_print)
         screen.blit(player_dinos_text, player_dinos_text_rect)
+      if event.type == pygame.MOUSEBUTTONDOWN:
+        if back_text_rect.collidepoint(event.pos):
+          game_state = 'hatch_screen'
+
+      if number_of_eggs == 0:
+        no_dino_text = smaller_font.render('Please hatch a dino.', True, (255, 255, 255))
+        no_dino_text_rect = no_dino_text.get_rect()
+        no_dino_text_rect.center = (x // 2, 110)
+        screen.blit(no_dino_text, no_dino_text_rect)
+    
+    if game_state == 'hatch_screen':
+      if len(player_dinos) == 9:
+        limit_text = smaller_font.render("You have reached the maximum limit of dinos!", True, (255, 255, 255))
+        limit_text_rect = limit_text.get_rect()
+        limit_text_rect.center = (x // 2, 110)
+        screen.blit(limit_text, limit_text_rect)
+    
     pygame.display.update()
     clock.tick(60)
